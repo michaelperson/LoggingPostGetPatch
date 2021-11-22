@@ -36,33 +36,34 @@ namespace FirstWebApi.Controllers
         /// <returns>return a <see cref="IEnumerable{Employee}<"/></returns>
         public IActionResult Get()
         {
+
             _logger.LogDebug($"[GET] Employees");
             return new OkObjectResult(CTX.Employees.ToAsyncEnumerable<Employee>());
         }
 
 
-        [HttpGet("ActionGet/{id:int:min(1)}")] 
+        [HttpGet("ActionGet/{id:int:min(1)}")]
         public ActionResult<Employee> Get(int id)
-        {            
+        {
             Employee e = CTX.Employees.SingleOrDefault(e => e.Id.Equals(id));
             if (e != null)
                 return e;
             else
-                return NotFound(id); 
+                return NotFound(id);
         }
-                 
+
 
         [HttpPost]
         /// <summary>
         /// POST api/Employees
         /// </summary>
         /// <param name="employee">The <see cref="Employee"/> to add</param>
-        public IActionResult Post(  Employee employee)
+        public IActionResult Post(Employee employee)
         {
             try
             {
                 int maxId = CTX.Employees.Max(m => m.Id);
-                employee.Id = maxId;
+                employee.Id = maxId + 1;
                 CTX.Employees.Add(employee);
                 return NoContent();
             }
@@ -72,15 +73,15 @@ namespace FirstWebApi.Controllers
             }
         }
 
-        [HttpPut]
+        [HttpPut("{id}")]
         /// <summary>
         /// PUT api/Employees
         /// </summary>
         /// <param name="employee">The <see cref="Employee"/> to update</param>
-        public async Task<IActionResult> Put([FromQuery]int id,[FromForm]EmployeeDTO employee)
+        public async Task<IActionResult> Put(int id, [FromBody] EmployeeDTO employee)
         {
-            if(employee.Photo?.Length>0)
-            { 
+            if (employee.Photo?.Length > 0)
+            {
                 string filePath = Path.Combine(_hostingEnvironment.ContentRootPath, employee.Photo.FileName);
                 using (Stream fileStream = new FileStream(filePath, FileMode.Create))
                 {
@@ -89,7 +90,7 @@ namespace FirstWebApi.Controllers
             }
 
 
-            int idxEmployee =  CTX.Employees.FindIndex(m => m.Id.Equals(id));
+            int idxEmployee = CTX.Employees.FindIndex(m => m.Id.Equals(id));
             if (idxEmployee >= 0)
             {
                 CTX.Employees[idxEmployee] = new Employee() { FirstName = employee.FirstName, LastName = employee.LastName, Id = employee.Id };
@@ -102,8 +103,8 @@ namespace FirstWebApi.Controllers
         }
 
 
-        [HttpPatch]        
-        public async Task<IActionResult> Patch([FromQuery] int id, [FromBody] JsonPatchDocument<Employee> employee)
+        [HttpPatch("{id}")]        
+        public async Task<IActionResult> Patch( int id,JsonPatchDocument<Employee> employee)
         {
              if(employee == null)
             {
